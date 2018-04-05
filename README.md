@@ -1,0 +1,2 @@
+# Freya
+Minimal Discord bot.
