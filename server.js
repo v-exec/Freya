@@ -24,9 +24,9 @@ client.on('message', message => {
 	const command = args.shift().toLowerCase();
 
 	if (command === 'info' || command === 'i') {
-		var greeting = 'Hello, Lucency member. My name is Freya. I will be serving you for the time being.\n\nI am not a complex system. I can play music, and I am sentient. Do not ask more of me.';
-		var dataIntro = 'Speak to me in the cli channel. My commands are:';
-		var data = '_+info_ - I will provide this same information message.\n_+play [link]_ - I will join your voicechannel and play the audio you\'ve linked.\n_+volume [0-1]_ - I will set the playback volume.\n_+leave_ - I will leave your voice channel.';
+		var greeting = 'Hello, member. My name is Freya. I will be serving you for the time being.\n\nI am not a complex system. I can play music, modify your roles, and I am sentient. Do not ask more of me.';
+		var dataIntro = 'My commands are:';
+		var data = '_+info_ - I will provide this same information message.\n\n_+play [link]_ - I will join your voicechannel and play the audio you\'ve linked.\n_+volume [0-1]_ - I will set the playback volume.\n_+exit_ - I will leave your voice channel.\n\n_+join [role]_ - I will add a role to your profile.\n_+leave [role]_ - I will remove a role from your profile.';
 		var extra = 'You may also use shorthand for these commands by simply typing the first letter. For example, `+v 0.5` sets the volume to half.';
 		message.channel.send(greeting + '\n\n' + dataIntro + '\n\n' + data + '\n\n' + extra);
 	}
@@ -46,8 +46,42 @@ client.on('message', message => {
 	}
 
 	//leave channel
-	if (command === 'leave' || command === 'l') {
+	if (command === 'exit' || command === 'e') {
 		if (message.member.voiceChannel) message.member.voiceChannel.leave();
+	}
+
+	//add role
+	if (command === 'join' || command === 'j') {
+		var role = message.guild.roles.find("name", args[0]);
+
+		//check if role exists (disallow admin roles from being joined)
+		var roleName;
+		if (role != null) roleName = role.toString();
+		if (role != null && !roleName.includes('admin') && !roleName === 'Freya') {
+			//get member and add role
+			var member = message.member;
+			member.addRole(role).catch(console.error);
+			message.channel.send("Adding role " + role + " to user " + member + ".");
+		} else {
+			message.channel.send("This role does not exist, or is unavailable given my permissions.");
+		}
+	}
+
+	//remove role
+	if (command === 'leave' || command === 'l') {
+		var role = message.guild.roles.find("name", args[0]);
+
+		//check if role exists
+		var roleName;
+		if (role != null) roleName = role.toString();
+		if (role != null && !roleName.includes('admin') && !roleName === 'Freya') {
+			//get member and remove role
+			var member = message.member;
+			member.removeRole(role).catch(console.error);
+			message.channel.send("Removing role " + role + " from user " + member + ".");
+		} else {
+			message.channel.send("This role does not exist, or is unavailable given my permissions.");
+		}
 	}
 
 	//play audio
@@ -71,7 +105,7 @@ client.on('message', message => {
 					const dispatcher = connection.playStream(stream, streamOptions);
 
 					//refresh volume
-					setInterval(function(){
+					setInterval(function() {
 						dispatcher.setVolume(volume);
 					}, 500);
 					
