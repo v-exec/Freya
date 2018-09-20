@@ -1,6 +1,6 @@
 {
   "name": "Freya",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "dependencies": {
     "async-limiter": {
       "integrity": "sha512-jp/uFnooOiO+L211eZOoSyzpOITMXx1rBITauYykG3BRYPu8h0UcxsPNB04RR5vo4Tyz3+ay17tR6JVf9qzYWg==",
