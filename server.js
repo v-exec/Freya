@@ -57,7 +57,7 @@ client.on('message', message => {
 		//check if role exists (disallow admin roles from being joined)
 		var roleName;
 		if (role != null) roleName = role.toString();
-		if (role != null && !roleName.includes('admin') && !roleName === 'Freya') {
+		if (role != null && !roleName.includes('admin') && roleName !== 'Freya') {
 			//get member and add role
 			var member = message.member;
 			member.addRole(role).catch(console.error);
@@ -74,7 +74,7 @@ client.on('message', message => {
 		//check if role exists
 		var roleName;
 		if (role != null) roleName = role.toString();
-		if (role != null && !roleName.includes('admin') && !roleName === 'Freya') {
+		if (role != null && !roleName.includes('admin') && roleName !== 'Freya') {
 			//get member and remove role
 			var member = message.member;
 			member.removeRole(role).catch(console.error);
