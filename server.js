@@ -9,6 +9,8 @@ client.on('ready', () => {
 	console.log("Ready to serve.")
 });
 
+client.on('error', console.error);
+
 client.on('message', message => {
 	//if not in server
 	if (!message.guild) return;
