@@ -15,27 +15,51 @@ client.on('ready', () => {
 
 client.on('error', console.error);
 
+//translate if react with 'translate' emoji
+client.on('messageReactionAdd', reaction => {
+	if (reaction._emoji.name === 'translate') {
+		var m = reaction.message.content;
+		
+		googleTranslate.detectLanguage(m, function(err, detection) {
+			if (detection.language !== config.language && detection.confidence > 0.5) {
+				googleTranslate.translate(m, detection.language, 'en', function(err, translation) {
+					if (err == null) {
+						reaction.message.channel.send({embed: {
+							'color': 16777215,
+							'fields': [{
+								'name': reaction.message.author.username + ' - ' + timeConverter(reaction.message.createdTimestamp) + ' EST',
+								'value': translation.translatedText
+							}]
+						}});
+					}
+				});
+			}
+		});
+	}
+});
+
+//notify bot of reaction add events even if relevant message is not cached
+client.on('raw', packet => {
+	if (!['MESSAGE_REACTION_ADD'].includes(packet.t)) return;
+	const channel = client.channels.get(packet.d.channel_id);
+	if (channel.messages.has(packet.d.message_id)) return;
+
+	channel.fetchMessage(packet.d.message_id).then(message => {
+        const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
+        const reaction = message.reactions.get(emoji);
+        if (reaction) reaction.users.set(packet.d.user_id, client.users.get(packet.d.user_id));
+        if (packet.t === 'MESSAGE_REACTION_ADD') {
+            client.emit('messageReactionAdd', reaction, client.users.get(packet.d.user_id));
+        }
+    });
+});
+
 client.on('message', message => {
 	//if not in server
 	if (!message.guild) return;
 
 	//if scanning own message
 	if (message.author.bot) return;
-
-	//auto-translate
-	googleTranslate.detectLanguage(message.content, function(err, detection) {
-		if (detection.language !== config.language && detection.confidence > 0.5) {
-			googleTranslate.translate(message.content, detection.language, 'en', function(err, translation) {
-				message.channel.send({embed: {
-					'color': 16777215,
-					'fields': [{
-						'name': 'Translation',
-						'value': translation.translatedText
-					}]
-				}});
-			});
-		}
-	});
 
 	//greeting reply
 	var m = message.content.toLowerCase();
@@ -52,7 +76,7 @@ client.on('message', message => {
 
 	if (command === 'info' || command === 'i') {
 		message.channel.send({embed: {
-			'description': 'Hello, my name is Freya. I am here to serve you.\n\nI am not a complex system. I can play music, modify your roles, and automatically translate your messages to English.\n',
+			'description': 'Hello, my name is Freya. I am here to serve you.\n\nI am not a complex system. I can play music, modify your roles, and translate your messages to English.\n',
 			'color': 16777215,
 			'author': {
 			'name': 'Freya',
@@ -72,8 +96,8 @@ client.on('message', message => {
 				'value': 'You may also use shorthand for these commands by simply typing the first letter. For example, `+v 0.5` sets the volume to half.'
 			},
 			{
-				'name': 'Translation',
-				'value': 'I will do my best to translate your messages if they are not in English. I will not always succeed, so please be patient with me.'
+				'name': 'Translations',
+				'value': 'To translate something, simply add the ' + client.emojis.find(emoji => emoji.name === 'translate') + ' `:translate:` reaction to the message, and I will translate it for you.'
 			},
 			{
 				'name': 'Media',
@@ -214,3 +238,14 @@ client.on('message', message => {
 });
 
 client.login(config.token);
+
+function timeConverter(UNIX_timestamp){
+	var a = new Date(parseInt(UNIX_timestamp));
+	var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	var month = months[a.getMonth()];
+	var date = a.getDate();
+	var hour = a.getHours();
+	var min = a.getMinutes();
+	var time = month + ' ' + date + ', ' + hour + ':' + min;
+	return time;
+}
